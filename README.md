@@ -57,16 +57,16 @@ $router->set404Handler(function() {
 ## Tests
 
 
-# Run all tests
+### Run all tests
 ```bash
 ./vendor/bin/phpunit
 ```
 
-# Run specific test
+### Run specific test
 ```bash
 ./vendor/bin/phpunit tests/RouterTest.php
 ```
-# Generate code coverage report
+### Generate code coverage report
 ```bash
 ./vendor/bin/phpunit --coverage-html coverage
 ```
