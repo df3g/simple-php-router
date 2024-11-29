@@ -1,3 +1,5 @@
+![example workflow](https://github.com/df3g/simple-php-router/actions/workflows/tests.yml/badge.svg)
+
 # Lightweight PHP MVC Router
 
 A simple, framework-agnostic PHP MVC router for easy routing in PHP applications.
