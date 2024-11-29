@@ -1,0 +1,30 @@
+{
+    "name": "df3g/simple-php-router",
+    "description": "A lightweight, framework-agnostic PHP router",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Df3g\\Router\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "authors": [
+        {
+            "name": "Daniel Gomes",
+            "email": "daniel.gomes@dgomes.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "keywords": [
+        "router",
+        "routing",
+        "mvc",
+        "php-router"
+    ]
+}
