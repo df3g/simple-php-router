@@ -1,6 +1,7 @@
 <?php
 namespace Df3g\Router\Tests;
 
+use Df3g\Router\Request;
 use PHPUnit\Framework\TestCase;
 use Df3g\Router\Router;
 
@@ -16,17 +17,22 @@ class OptionalParameterTest extends TestCase {
      */
     public function testSingleOptionalParameter() {
         $capturedName = null;
-        $this->router->addRoute('GET', 'users/{name?}', function($name = null) use (&$capturedName) {
-            $capturedName = $name;
+        $this->router->addRoute('GET', '/users/{name?}', function(Request $request) use (&$capturedName) {
+            $capturedName = $request->getParam('name');
+
+            var_dump($request);
         });
 
         // Test with parameter
-        $this->router->dispatch('GET', 'users/john');
+        $this->router->dispatch('GET', '/users/john');
         $this->assertEquals('john', $capturedName, 'Optional parameter should be captured when provided');
 
+        // Reset captured name
+        $capturedName = 'previous-value';
+        
         // Test without parameter
-        $this->router->dispatch('GET', 'users');
-        $this->assertEmpty($capturedName, 'Optional parameter should be null when not provided');
+        $this->router->dispatch('GET', '/users');
+        $this->assertNull($capturedName, 'Optional parameter should be null when not provided');
     }
 
     /**
@@ -36,21 +42,24 @@ class OptionalParameterTest extends TestCase {
         $capturedCategory = null;
         $capturedTag = null;
 
-        $this->router->addRoute('GET', 'posts/{category}/{tag?}', function($category, $tag = null) use (&$capturedCategory, &$capturedTag) {
-            $capturedCategory = $category;
-            $capturedTag = $tag;
+        $this->router->addRoute('GET', '/posts/{category}/{tag?}', function($request) use (&$capturedCategory, &$capturedTag) {
+            $capturedCategory = $request->getParam('category');
+            $capturedTag = $request->getParam('tag');
         });
 
         // Test with both parameters
-        $this->router->dispatch('GET', 'posts/tech/php');
+        $this->router->dispatch('GET', '/posts/tech/php');
         $this->assertEquals('tech', $capturedCategory, 'First parameter should be captured');
         $this->assertEquals('php', $capturedTag, 'Optional second parameter should be captured');
 
+        // Reset captured values
+        $capturedCategory = 'previous-value';
+        $capturedTag = 'previous-value';
+
         // Test with only required parameter
-        $capturedTag = 'previous';
-        $this->router->dispatch('GET', 'posts/general');
+        $this->router->dispatch('GET', '/posts/general');
         $this->assertEquals('general', $capturedCategory, 'First parameter should be captured');
-        $this->assertEmpty($capturedTag, 'Optional second parameter should be null');
+        $this->assertNull($capturedTag, 'Optional second parameter should be null');
     }
 
     /**
@@ -61,36 +70,51 @@ class OptionalParameterTest extends TestCase {
         $capturedMonth = null;
         $capturedDay = null;
 
-        $this->router->addRoute('GET', 'archive/{year?}/{month?}/{day?}', 
-            function($year = null, $month = null, $day = null) use (&$capturedYear, &$capturedMonth, &$capturedDay) {
-                $capturedYear = $year;
-                $capturedMonth = $month;
-                $capturedDay = $day;
+        $this->router->addRoute('GET', '/archive/{year?}/{month?}/{day?}', 
+            function($request) use (&$capturedYear, &$capturedMonth, &$capturedDay) {
+                $capturedYear = $request->getParam('year');
+                $capturedMonth = $request->getParam('month');
+                $capturedDay = $request->getParam('day');
             }
         );
 
         // Test with all parameters
-        $this->router->dispatch('GET', 'archive/2023/12/25');
+        $this->router->dispatch('GET', '/archive/2023/12/25');
         $this->assertEquals('2023', $capturedYear, 'First optional parameter should be captured');
         $this->assertEquals('12', $capturedMonth, 'Second optional parameter should be captured');
         $this->assertEquals('25', $capturedDay, 'Third optional parameter should be captured');
 
+        // Reset captured values
+        $capturedYear = 'previous-value';
+        $capturedMonth = 'previous-value';
+        $capturedDay = 'previous-value';
+
         // Test with partial parameters
-        $this->router->dispatch('GET', 'archive/2023/12');
+        $this->router->dispatch('GET', '/archive/2023/12');
         $this->assertEquals('2023', $capturedYear, 'First optional parameter should be captured');
         $this->assertEquals('12', $capturedMonth, 'Second optional parameter should be captured');
-        $this->assertEmpty($capturedDay, 'Third optional parameter should be null');
+        $this->assertNull($capturedDay, 'Third optional parameter should be null');
+
+        // Reset captured values
+        $capturedYear = 'previous-value';
+        $capturedMonth = 'previous-value';
+        $capturedDay = 'previous-value';
 
         // Test with single parameter
-        $this->router->dispatch('GET', 'archive/2023');
+        $this->router->dispatch('GET', '/archive/2023');
         $this->assertEquals('2023', $capturedYear, 'First optional parameter should be captured');
-        $this->assertEmpty($capturedMonth, 'Second optional parameter should be null');
-        $this->assertEmpty($capturedDay, 'Third optional parameter should be null');
+        $this->assertNull($capturedMonth, 'Second optional parameter should be null');
+        $this->assertNull($capturedDay, 'Third optional parameter should be null');
+
+        // Reset captured values
+        $capturedYear = 'previous-value';
+        $capturedMonth = 'previous-value';
+        $capturedDay = 'previous-value';
 
         // Test without parameters
-        $this->router->dispatch('GET', 'archive');
-        $this->assertEmpty($capturedYear, 'First optional parameter should be null');
-        $this->assertEmpty($capturedMonth, 'Second optional parameter should be null');
-        $this->assertEmpty($capturedDay, 'Third optional parameter should be null');
+        $this->router->dispatch('GET', '/archive');
+        $this->assertNull($capturedYear, 'First optional parameter should be null');
+        $this->assertNull($capturedMonth, 'Second optional parameter should be null');
+        $this->assertNull($capturedDay, 'Third optional parameter should be null');
     }
 }
