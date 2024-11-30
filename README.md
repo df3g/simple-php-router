@@ -43,6 +43,16 @@ $router->addRoute('GET', '/users/{id}', function(Request $request) {
 $router->dispatch();
 ```
 
+## Play around with it
+
+If you spin the included `.devcontainer` it will run the `./index.php` file provided with a couple of examples.
+
+Try these:
+
+- http://localhost/users
+- http://localhost/users/john
+- http://localhost/users/john/profile2
+
 ## Advanced Usage
 
 ### Custom 404 Handler
