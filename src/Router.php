@@ -16,7 +16,6 @@ class Router {
     public function addRoute($method, $path, $handler) {
         // Normalize the path and method
         $method = strtoupper($method);
-        $path = trim($path, '/');
         
         // Store the route with a pattern for parameter matching
         $this->routes[] = [
@@ -53,7 +52,7 @@ class Router {
         $requestMethod = $requestMethod ?? $_SERVER['REQUEST_METHOD'];
         $requestUri = $requestUri ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         
-        // Normalize the request URI
+        // Normalize URI
         $requestUri = trim($requestUri, '/');
 
         // Try to match a route
@@ -67,24 +66,29 @@ class Router {
 
                 // Handle required parameters
                 foreach ($route['params'] as $name) {
-                    $params[] = $matches[$paramIndex] ?? null;
+                    $params[$name] = $matches[$paramIndex] ?? null;
                     $paramIndex++;
                 }
 
                 // Handle optional parameters
                 foreach ($route['optionalParams'] as $name) {
-                    $params[] = $matches[$paramIndex] ?? null;
+                    $value = $matches[$paramIndex] ?? null;
+                    if ($value !== null && $value !== '') {
+                        $params[$name] = $value;
+                    }
                     $paramIndex++;
                 }
 
-                // Call the route handler with matched parameters
-                return call_user_func_array($route['handler'], $params);
+                // Create request object and pass it to the handler
+                $request = new Request($requestMethod, $requestUri, $params);
+                return call_user_func($route['handler'], $request);
             }
         }
 
         // Handle not found
         if ($this->notFoundHandler) {
-            return call_user_func($this->notFoundHandler);
+            $request = new Request($requestMethod, $requestUri, []);
+            return call_user_func($this->notFoundHandler, $request);
         } else {
             http_response_code(404);
             echo "404 Not Found";
@@ -98,17 +102,24 @@ class Router {
      * @return string
      */
     private function convertPathToRegex($path) {
-        // Replace {param?} with optional regex capture groups
-        $regex = preg_replace_callback('/\{([^}]+)\?}/', function($matches) {
-            return '?([^/]*)';
+        // Normalize path
+        $path = trim($path, '/');
+
+        // Replace {param} with required regex capture groups first
+        $regex = preg_replace_callback('/\{([^}?]+)\}(?!\?)/', function($matches) {
+            return '([^/]+)';
         }, $path);
 
-        // Replace {param} with required regex capture groups
-        $regex = preg_replace_callback('/\{([^}]+)\}/', function($matches) {
-            return '([^/]+)';
+        // Replace {param?} with optional regex capture groups
+        $regex = preg_replace_callback('/\{([^}?]+)\?}/', function($matches) {
+            return '(?:/?([^/]*))?';
         }, $regex);
         
-        return '#^' . $regex . '$#';
+        // Add debug output
+        error_log("Path: " . $path);
+        error_log("Regex: " . $regex);
+        
+        return '#^' . $regex . '/?$#';
     }
 
     /**
@@ -118,7 +129,7 @@ class Router {
      * @return array
      */
     private function extractParams($path) {
-        preg_match_all('/\{([^}]+)\}(?!\?)/', $path, $matches);
+        preg_match_all('/\{([^}?]+)\}(?!\?)/', $path, $matches);
         return $matches[1];
     }
 
@@ -129,7 +140,9 @@ class Router {
      * @return array
      */
     private function extractOptionalParams($path) {
-        preg_match_all('/\{([^}]+)\?}/', $path, $matches);
-        return $matches[1];
+        preg_match_all('/\{([^}?]+)\?}/', $path, $matches);
+        return array_map(function($param) {
+            return rtrim($param, '?');
+        }, $matches[1]);
     }
 }

@@ -3,6 +3,7 @@ namespace Df3g\Router\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Df3g\Router\Router;
+use Df3g\Router\Request;
 
 class RouterTest extends TestCase {
     private $router;
@@ -15,9 +16,8 @@ class RouterTest extends TestCase {
      * Test basic route matching
      */
     public function testBasicRouteMatching() {
-        
         $called = false;
-        $this->router->addRoute('GET', '/', function() use (&$called) {
+        $this->router->addRoute('GET', '/', function(Request $request) use (&$called) {
             $called = true;
         });
 
@@ -30,8 +30,8 @@ class RouterTest extends TestCase {
      */
     public function testRouteWithSingleParameter() {
         $capturedId = null;
-        $this->router->addRoute('GET', 'users/{id}', function($id) use (&$capturedId) {
-            $capturedId = $id;
+        $this->router->addRoute('GET', 'users/{id}', function(Request $request) use (&$capturedId) {
+            $capturedId = $request->getParam('id');
         });
 
         $this->router->dispatch('GET', 'users/123');
@@ -44,9 +44,9 @@ class RouterTest extends TestCase {
     public function testRouteWithMultipleParameters() {
         $capturedCategory = null;
         $capturedSlug = null;
-        $this->router->addRoute('GET', 'posts/{category}/{slug}', function($category, $slug) use (&$capturedCategory, &$capturedSlug) {
-            $capturedCategory = $category;
-            $capturedSlug = $slug;
+        $this->router->addRoute('GET', 'posts/{category}/{slug}', function(Request $request) use (&$capturedCategory, &$capturedSlug) {
+            $capturedCategory = $request->getParam('category');
+            $capturedSlug = $request->getParam('slug');
         });
 
         $this->router->dispatch('GET', 'posts/tech/awesome-article');
@@ -61,12 +61,14 @@ class RouterTest extends TestCase {
         $getCallbackCalled = false;
         $postCallbackCalled = false;
 
-        $this->router->addRoute('GET', 'test', function() use (&$getCallbackCalled) {
+        $this->router->addRoute('GET', 'test', function(Request $request) use (&$getCallbackCalled) {
             $getCallbackCalled = true;
+            $this->assertEquals('GET', $request->getMethod());
         });
 
-        $this->router->addRoute('POST', 'test', function() use (&$postCallbackCalled) {
+        $this->router->addRoute('POST', 'test', function(Request $request) use (&$postCallbackCalled) {
             $postCallbackCalled = true;
+            $this->assertEquals('POST', $request->getMethod());
         });
 
         $this->router->dispatch('GET', 'test');
@@ -85,7 +87,7 @@ class RouterTest extends TestCase {
      */
     public function testRouteMatchingWithTrailingSlashes() {
         $called = false;
-        $this->router->addRoute('GET', 'test-route', function() use (&$called) {
+        $this->router->addRoute('GET', 'test-route', function(Request $request) use (&$called) {
             $called = true;
         });
 
@@ -101,7 +103,7 @@ class RouterTest extends TestCase {
      * Test return value from route handler
      */
     public function testRouteHandlerReturnValue() {
-        $this->router->addRoute('GET', 'return-test', function() {
+        $this->router->addRoute('GET', 'return-test', function(Request $request) {
             return 'test-value';
         });
 
@@ -114,7 +116,8 @@ class RouterTest extends TestCase {
      */
     public function testParameterValidation() {
         $matchedNumeric = false;
-        $this->router->addRoute('GET', 'users/{id}', function($id) use (&$matchedNumeric) {
+        $this->router->addRoute('GET', 'users/{id}', function(Request $request) use (&$matchedNumeric) {
+            $id = $request->getParam('id');
             $matchedNumeric = is_numeric($id);
         });
 
@@ -131,11 +134,39 @@ class RouterTest extends TestCase {
      */
     public function testCustomNotFoundHandler() {
         $notFoundCalled = false;
-        $this->router->setNotFoundHandler(function() use (&$notFoundCalled) {
+        $this->router->setNotFoundHandler(function(Request $request) use (&$notFoundCalled) {
             $notFoundCalled = true;
+            $this->assertNotNull($request->getMethod());
+            $this->assertNotNull($request->getUri());
         });
 
         $this->router->dispatch('GET', '/non-existent-route');
         $this->assertTrue($notFoundCalled, 'Custom not found handler should be called for non-matching routes');
+    }
+
+    /**
+     * Test Request object functionality
+     */
+    public function testRequestObject() {
+        $request = null;
+        $this->router->addRoute('GET', 'test/{param1}/{param2?}', function(Request $req) use (&$request) {
+            $request = $req;
+            var_dump($req->getParams());
+        });
+
+        $this->router->dispatch('GET', 'test/value1/value2');
+        
+        $this->assertNotNull($request);
+        $this->assertEquals('GET', $request->getMethod());
+        $this->assertEquals('test/value1/value2', $request->getUri());
+        $this->assertEquals('value1', $request->getParam('param1'));
+        $this->assertEquals('value2', $request->getParam('param2'));
+        $this->assertNull($request->getParam('non_existent'));
+        $this->assertEquals('default', $request->getParam('non_existent', 'default'));
+        
+        $params = $request->getParams();
+        $this->assertIsArray($params);
+        $this->assertArrayHasKey('param1', $params);
+        $this->assertArrayHasKey('param2', $params);
     }
 }

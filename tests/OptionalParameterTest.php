@@ -3,6 +3,7 @@ namespace Df3g\Router\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Df3g\Router\Router;
+use Df3g\Router\Request;
 
 class OptionalParameterTest extends TestCase {
     private $router;
@@ -16,8 +17,8 @@ class OptionalParameterTest extends TestCase {
      */
     public function testSingleOptionalParameter() {
         $capturedName = null;
-        $this->router->addRoute('GET', 'users/{name?}', function($name = null) use (&$capturedName) {
-            $capturedName = $name;
+        $this->router->addRoute('GET', 'users/{name?}', function(Request $request) use (&$capturedName) {
+            $capturedName = $request->getParam('name');
         });
 
         // Test with parameter
@@ -36,9 +37,9 @@ class OptionalParameterTest extends TestCase {
         $capturedCategory = null;
         $capturedTag = null;
 
-        $this->router->addRoute('GET', 'posts/{category}/{tag?}', function($category, $tag = null) use (&$capturedCategory, &$capturedTag) {
-            $capturedCategory = $category;
-            $capturedTag = $tag;
+        $this->router->addRoute('GET', 'posts/{category}/{tag?}', function(Request $request) use (&$capturedCategory, &$capturedTag) {
+            $capturedCategory = $request->getParam('category');
+            $capturedTag = $request->getParam('tag');
         });
 
         // Test with both parameters
@@ -62,10 +63,10 @@ class OptionalParameterTest extends TestCase {
         $capturedDay = null;
 
         $this->router->addRoute('GET', 'archive/{year?}/{month?}/{day?}', 
-            function($year = null, $month = null, $day = null) use (&$capturedYear, &$capturedMonth, &$capturedDay) {
-                $capturedYear = $year;
-                $capturedMonth = $month;
-                $capturedDay = $day;
+            function(Request $request) use (&$capturedYear, &$capturedMonth, &$capturedDay) {
+                $capturedYear = $request->getParam('year');
+                $capturedMonth = $request->getParam('month');
+                $capturedDay = $request->getParam('day');
             }
         );
 
