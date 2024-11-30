@@ -13,10 +13,25 @@ class Router {
      * @param callable $handler Route handler
      * @return self
      */
-    public function addRoute($method, $path, $handler) {
+    public function addRoute(string $method, string $path, callable|string $handler): self {
         // Normalize the path and method
         $method = strtoupper($method);
         $path = trim($path, '/');
+        
+        // Convert string handler to callable if needed
+        if (is_string($handler)) {
+            if (strpos($handler, '::') === false) {
+                throw new \InvalidArgumentException('Handler string must be in format "class::method"');
+            }
+            [$class, $method] = explode('::', $handler);
+            if (!class_exists($class)) {
+                throw new \InvalidArgumentException("Class {$class} does not exist");
+            }
+            if (!method_exists($class, $method)) {
+                throw new \InvalidArgumentException("Method {$method} does not exist in class {$class}");
+            }
+            $handler = [$class, $method];
+        }
         
         // Store the route with a pattern for parameter matching
         $this->routes[] = [
@@ -36,7 +51,7 @@ class Router {
      * @param callable $handler Not found handler function
      * @return self
      */
-    public function setNotFoundHandler($handler) {
+    public function setNotFoundHandler(callable $handler): self {
         $this->notFoundHandler = $handler;
         return $this;
     }
@@ -48,7 +63,7 @@ class Router {
      * @param string $requestUri
      * @return mixed
      */
-    public function dispatch($requestMethod = null, $requestUri = null) {
+    public function dispatch(string $requestMethod = null, string $requestUri = null) {
         // Use current request if not provided
         $requestMethod = $requestMethod ?? $_SERVER['REQUEST_METHOD'];
         $requestUri = $requestUri ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -67,18 +82,27 @@ class Router {
 
                 // Handle required parameters
                 foreach ($route['params'] as $name) {
-                    $params[] = $matches[$paramIndex] ?? null;
+                    $params[$name] = $matches[$paramIndex] ?? null;
                     $paramIndex++;
                 }
 
                 // Handle optional parameters
                 foreach ($route['optionalParams'] as $name) {
-                    $params[] = $matches[$paramIndex] ?? null;
+                    $params[$name] = $matches[$paramIndex] ?? null;
                     $paramIndex++;
                 }
 
-                // Call the route handler with matched parameters
-                return call_user_func_array($route['handler'], $params);
+                // Create request object
+                $request = new Request(
+                    $requestMethod,
+                    $requestUri,
+                    $params,
+                    $_GET ?? [],
+                    $_POST ?? []
+                );
+
+                // Call the route handler with Request object
+                return call_user_func($route['handler'], $request);
             }
         }
 
@@ -97,14 +121,14 @@ class Router {
      * @param string $path
      * @return string
      */
-    private function convertPathToRegex($path) {
-        // Replace {param?} with optional regex capture groups
-        $regex = preg_replace_callback('/\{([^}]+)\?}/', function($matches) {
-            return '?([^/]*)';
+    private function convertPathToRegex(string $path): string {
+        // Handle optional parameters first - make the entire /parameter part optional
+        $regex = preg_replace_callback('/\/\{([^}?]+)\?\}/', function($matches) {
+            return '(?:/([^/]+))?';
         }, $path);
-
-        // Replace {param} with required regex capture groups
-        $regex = preg_replace_callback('/\{([^}]+)\}/', function($matches) {
+        
+        // Then handle required parameters
+        $regex = preg_replace_callback('/\{([^}?]+)\}/', function($matches) {
             return '([^/]+)';
         }, $regex);
         
@@ -117,8 +141,8 @@ class Router {
      * @param string $path
      * @return array
      */
-    private function extractParams($path) {
-        preg_match_all('/\{([^}]+)\}(?!\?)/', $path, $matches);
+    private function extractParams(string $path): array {
+        preg_match_all('/\{([^}?]+)\}(?!\?)/', $path, $matches); // Added ? to exclude optional params
         return $matches[1];
     }
 
@@ -128,8 +152,8 @@ class Router {
      * @param string $path
      * @return array
      */
-    private function extractOptionalParams($path) {
-        preg_match_all('/\{([^}]+)\?}/', $path, $matches);
+    private function extractOptionalParams(string $path): array {
+        preg_match_all('/\{([^}?]+)\?\}/', $path, $matches); // Modified to capture name without ?
         return $matches[1];
     }
 }
