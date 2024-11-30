@@ -24,7 +24,8 @@ composer require df3g/simple-php-router
 
 ```php
 <?php
-use YourNamespace\Router\Router;
+use Df3g\Router\Request;
+use Df3g\Router\Router;
 
 // Create a new router instance
 $router = new Router();
@@ -34,8 +35,8 @@ $router->addRoute('GET', '/', function() {
     echo "Home Page";
 });
 
-$router->addRoute('GET', 'users/{id}', function($id) {
-    echo "User Profile for ID: $id";
+$router->addRoute('GET', '/users/{id}', function(Request $request) {
+    echo "User Profile for ID:". $request->getParam('id');
 });
 
 // Dispatch the current request

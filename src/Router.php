@@ -63,7 +63,7 @@ class Router {
      * @param string $requestUri
      * @return mixed
      */
-    public function dispatch(string $requestMethod = null, string $requestUri = null): mixed {
+    public function dispatch(string $requestMethod = null, string $requestUri = null) {
         // Use current request if not provided
         $requestMethod = $requestMethod ?? $_SERVER['REQUEST_METHOD'];
         $requestUri = $requestUri ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -122,13 +122,13 @@ class Router {
      * @return string
      */
     private function convertPathToRegex(string $path): string {
-        // Replace {param?} with optional regex capture groups
-        $regex = preg_replace_callback('/\{([^}]+)\?\}/', function($matches) {
-            return '([^/]*)';
+        // Handle optional parameters first - make the entire /parameter part optional
+        $regex = preg_replace_callback('/\/\{([^}?]+)\?\}/', function($matches) {
+            return '(?:/([^/]+))?';
         }, $path);
-
-        // Replace {param} with required regex capture groups
-        $regex = preg_replace_callback('/\{([^}]+)\}/', function($matches) {
+        
+        // Then handle required parameters
+        $regex = preg_replace_callback('/\{([^}?]+)\}/', function($matches) {
             return '([^/]+)';
         }, $regex);
         
@@ -142,7 +142,7 @@ class Router {
      * @return array
      */
     private function extractParams(string $path): array {
-        preg_match_all('/\{([^}]+)\}(?!\?)/', $path, $matches);
+        preg_match_all('/\{([^}?]+)\}(?!\?)/', $path, $matches); // Added ? to exclude optional params
         return $matches[1];
     }
 
@@ -153,7 +153,7 @@ class Router {
      * @return array
      */
     private function extractOptionalParams(string $path): array {
-        preg_match_all('/\{([^}]+)\?}/', $path, $matches);
+        preg_match_all('/\{([^}?]+)\?\}/', $path, $matches); // Modified to capture name without ?
         return $matches[1];
     }
 }

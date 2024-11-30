@@ -19,8 +19,6 @@ class OptionalParameterTest extends TestCase {
         $capturedName = null;
         $this->router->addRoute('GET', '/users/{name?}', function(Request $request) use (&$capturedName) {
             $capturedName = $request->getParam('name');
-
-            var_dump($request);
         });
 
         // Test with parameter
