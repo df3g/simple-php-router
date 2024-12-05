@@ -1,5 +1,5 @@
 <?php
-namespace Df3g\Router;
+namespace Dgomespt\Router;
 
 class Request {
     private array $params;

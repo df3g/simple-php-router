@@ -1,4 +1,4 @@
-![example workflow](https://github.com/df3g/simple-php-router/actions/workflows/tests.yml/badge.svg)
+![example workflow](https://github.com/dgomespt/simple-php-router/actions/workflows/tests.yml/badge.svg)
 
 # Lightweight PHP MVC Router
 
@@ -17,15 +17,15 @@ A simple, framework-agnostic PHP MVC router for easy routing in PHP applications
 Install via Composer:
 
 ```bash
-composer require df3g/simple-php-router
+composer require dgomespt/simple-php-router
 ```
 
 ## Basic Usage
 
 ```php
 <?php
-use Df3g\Router\Request;
-use Df3g\Router\Router;
+use Dgomespt\Router\Request;
+use Dgomespt\Router\Router;
 
 // Create a new router instance
 $router = new Router();

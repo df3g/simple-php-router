@@ -1,9 +1,9 @@
 <?php
-namespace Df3g\Router\Tests;
+namespace Dgomespt\Router\Tests;
 
-use Df3g\Router\Request;
+use Dgomespt\Router\Request;
 use PHPUnit\Framework\TestCase;
-use Df3g\Router\Router;
+use Dgomespt\Router\Router;
 
 class OptionalParameterTest extends TestCase {
     private $router;

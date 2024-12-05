@@ -1,11 +1,11 @@
 {
-    "name": "df3g/simple-php-router",
+    "name": "dgomespt/simple-php-router",
     "description": "A lightweight, framework-agnostic PHP router",
     "type": "library",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Df3g\\Router\\": "src/"
+            "Dgomespt\\Router\\": "src/"
         }
     },
     "require": {

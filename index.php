@@ -1,7 +1,7 @@
 <?php
 
-use Df3g\Router\Request;
-use Df3g\Router\Router;
+use Dgomespt\Router\Request;
+use Dgomespt\Router\Router;
 
 require __DIR__ . '/vendor/autoload.php';
 

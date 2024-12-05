@@ -1,7 +1,7 @@
 <?php
-namespace Df3g\Router\Tests;
+namespace Dgomespt\Router\Tests;
 
-use Df3g\Router\Request;
+use Dgomespt\Router\Request;
 use PHPUnit\Framework\TestCase;
 
 class RequestTest extends TestCase
